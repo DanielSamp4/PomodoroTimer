@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="c:\Users\neuro\Documents\Projetos.py\Pomodoro\.venv"
+VIRTUAL_ENV="c:\Users\danig\Documents\GitHub\PomodoroTimer\.venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
