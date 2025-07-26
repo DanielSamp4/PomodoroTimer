@@ -2,6 +2,7 @@
     "work_mins": 1,
     "break_mins": 1,
     "work_color": "#ffffff",
-    "break_color": "#af0850",
-    "transparency": 0.05
+    "break_color": "#981f40",
+    "transparency": 0.1,
+    "allow_move": true
 }

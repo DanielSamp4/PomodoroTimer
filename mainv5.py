@@ -19,17 +19,9 @@ def load_initial_config():
         "break_mins": 5,
         "work_color": "white",
         "break_color": "#FF6347",
-        "transparency": 0.1
+        "transparency": 0.1,
+        "allow_move": True # Padrão para permitir mover
     }
-
-# Não usaremos mais as variáveis globais WORK_MINS, etc., diretamente aqui
-# pois as configurações serão gerenciadas na instância da classe PomodoroTimer.
-# current_config = load_initial_config()
-# WORK_MINS = current_config["work_mins"]
-# BREAK_MINS = current_config["break_mins"]
-# WORK_COLOR = current_config["work_color"]
-# BREAK_COLOR = current_config["break_color"]
-# TRANSPARENCY = current_config["transparency"]
 
 class PomodoroTimer:
     def __init__(self, root):
@@ -76,6 +68,9 @@ class PomodoroTimer:
                 self.time_left = self.config["break_mins"] * 60
             self.update_timer_display()
 
+        # Re-bind dos eventos de movimento se a permissão mudou
+        self._bind_movement_events()
+
         print("Configurações aplicadas: ", self.config)
 
 
@@ -102,13 +97,23 @@ class PomodoroTimer:
         )
         self.timer_label.pack(fill=tk.BOTH, expand=True, pady=20)
 
-        self.timer_label.bind("<ButtonPress-1>", self.start_move)
-        self.timer_label.bind("<B1-Motion>", self.do_move)
+        # Bind dos eventos de movimento controlado por permissão
+        self._bind_movement_events()
 
         self.timer_label.bind("<Button-3>", self.show_context_menu)
         self.root.bind("<Button-3>", self.show_context_menu)
 
         self.root.bind("<Unmap>", self.on_minimize)
+
+    def _bind_movement_events(self):
+        """Conecta ou desconecta os eventos de movimento com base na configuração."""
+        if self.config.get("allow_move", True): # Assume True se a chave não existir (padrão antigo)
+            self.timer_label.bind("<ButtonPress-1>", self.start_move)
+            self.timer_label.bind("<B1-Motion>", self.do_move)
+        else:
+            # Desconecta os binds se não for permitido mover
+            self.timer_label.unbind("<ButtonPress-1>")
+            self.timer_label.unbind("<B1-Motion>")
 
     def on_minimize(self, event=None):
         """Esconde a janela quando ela é minimizada (para a bandeja)."""
@@ -120,15 +125,21 @@ class PomodoroTimer:
              print("Janela escondida para a bandeja.")
 
     def start_move(self, event):
-        self.x = event.x
-        self.y = event.y
+        """Inicia o movimento da janela se permitido."""
+        # A verificação 'allow_move' já está sendo feita no _bind_movement_events,
+        # mas adicionar uma verificação aqui é uma segurança extra.
+        if self.config.get("allow_move", True): 
+            self.x = event.x
+            self.y = event.y
 
     def do_move(self, event):
-        deltax = event.x - self.x
-        deltay = event.y - self.y
-        x = self.root.winfo_x() + deltax
-        y = self.root.winfo_y() + deltay
-        self.root.geometry(f"+{x}+{y}")
+        """Executa o movimento da janela se permitido."""
+        if self.config.get("allow_move", True):
+            deltax = event.x - self.x
+            deltay = event.y - self.y
+            x = self.root.winfo_x() + deltax
+            y = self.root.winfo_y() + deltay
+            self.root.geometry(f"+{x}+{y}")
 
     def show_context_menu(self, event):
         """Exibe um menu de contexto ao clicar com o botão direito."""
@@ -206,13 +217,11 @@ class PomodoroTimer:
 
         if self.is_work_time:
             self.is_work_time = False
-            # Usa a configuração da instância
             self.time_left = self.config["break_mins"] * 60 
             flash_color = self.config["break_color"]
             next_timer_color = self.config["break_color"]
         else:
             self.is_work_time = True
-            # Usa a configuração da instância
             self.time_left = self.config["work_mins"] * 60 
             flash_color = self.config["work_color"]
             next_timer_color = self.config["work_color"]
@@ -226,13 +235,11 @@ class PomodoroTimer:
         if not self.running:
             self.running = True
             self.update_timer()
-            self._update_tray_icon_menu() # Atualiza o menu da bandeja
 
     def stop_timer(self):
         """Para o timer."""
-        if self.running: # Só para se estiver rodando
+        if self.running: 
             self.running = False
-            self._update_tray_icon_menu() # Atualiza o menu da bandeja
 
     def toggle_timer(self):
         """Alterna entre iniciar e parar o timer."""
@@ -271,8 +278,6 @@ class PomodoroTimer:
             else:
                 image = Image.new('RGB', (64, 64), color = 'red')
                 
-            # Define o menu da bandeja como uma propriedade da classe
-            # Usamos uma função lambda para o item de iniciar/pausar para que ele possa ser atualizado
             self._tray_menu = Menu(
                 MenuItem('Mostrar Timer', self._show_timer_from_tray_callback),
                 MenuItem(lambda text: 'Pausar' if self.running else 'Iniciar', self._toggle_timer_from_tray_callback),
@@ -287,17 +292,6 @@ class PomodoroTimer:
             print(f"Erro ao configurar o ícone da bandeja: {e}")
             print("Certifique-se de ter 'pystray' e 'Pillow' instalados (pip install pystray Pillow).")
 
-    def _update_tray_icon_menu(self):
-        """Força a atualização do menu da bandeja (para mudar Iniciar/Pausar)."""
-        if self.system_tray_icon:
-            # pystray automaticamente redesenha o menu quando um callable é fornecido
-            # não precisamos fazer nada explícito aqui além de garantir que a condição
-            # do callable seja reavaliada.
-            # O simples fato de chamar start_timer ou stop_timer já prepara para isso.
-            pass # Nenhuma ação explícita necessária aqui para o pystray 0.19.5+
-
-
-    # Callbacks para o menu da bandeja que usam root.after()
     def _show_timer_from_tray_callback(self, icon, item):
         self.root.after(0, self.show_timer_window)
 
@@ -336,6 +330,5 @@ if __name__ == "__main__":
         main_thread.join()
     except KeyboardInterrupt:
         print("\nEncerrando o timer.")
-        # Garante que o Tkinter seja encerrado de forma limpa
         if tk._default_root:
              tk._default_root.after(0, lambda: tk._default_root.quit())

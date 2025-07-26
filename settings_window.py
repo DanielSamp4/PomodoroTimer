@@ -7,17 +7,15 @@ class SettingsWindow(tk.Toplevel):
     def __init__(self, parent_root, on_save_callback):
         super().__init__(parent_root)
         self.parent_root = parent_root
-        # O callback precisa ser agendado na thread principal do parent_root
         self.on_save_callback = on_save_callback 
         self.title("Configurações do Pomodoro")
-        self.geometry("400x400")
+        self.geometry("400x450") # Aumentei um pouco a altura para o novo item
         self.resizable(False, False)
-        self.protocol("WM_DELETE_WINDOW", self.hide_window) # Esconde ao invés de fechar
+        self.protocol("WM_DELETE_WINDOW", self.hide_window)
 
         self.config_file = "config.json"
         self.load_configurations()
         self.create_widgets()
-        # Inicialmente escondida, será mostrada por show_window()
         self.withdraw() 
 
     def load_configurations(self):
@@ -31,7 +29,8 @@ class SettingsWindow(tk.Toplevel):
                 "break_mins": 5,
                 "work_color": "white",
                 "break_color": "#FF6347",
-                "transparency": 0.1
+                "transparency": 0.1,
+                "allow_move": True # NOVO: Permissão para mover
             }
 
     def save_configurations(self):
@@ -40,17 +39,18 @@ class SettingsWindow(tk.Toplevel):
             self.config["work_mins"] = int(self.work_mins_var.get())
             self.config["break_mins"] = int(self.break_mins_var.get())
             
-            # Validação simples para transparência
             transparency_val = float(self.transparency_var.get())
             if not (0.0 <= transparency_val <= 1.0):
                 raise ValueError("A transparência deve ser entre 0.0 e 1.0.")
             self.config["transparency"] = transparency_val
 
+            # NOVO: Salva o estado da permissão de mover
+            self.config["allow_move"] = self.allow_move_var.get() 
+
             with open(self.config_file, "w") as f:
                 json.dump(self.config, f, indent=4)
             messagebox.showinfo("Sucesso", "Configurações salvas com sucesso!")
             
-            # Chama o callback na thread principal
             self.parent_root.after(0, lambda: self.on_save_callback(self.config)) 
             self.hide_window()
         except ValueError as ve:
@@ -90,8 +90,14 @@ class SettingsWindow(tk.Toplevel):
         self.transparency_var = tk.StringVar(value=str(self.config.get("transparency", 0.1)))
         ttk.Entry(main_frame, textvariable=self.transparency_var).grid(row=4, column=1, sticky=(tk.W, tk.E), padx=5)
 
+        # NOVO: Checkbox para permitir mover
+        ttk.Label(main_frame, text="Permitir Mover Timer:").grid(row=5, column=0, sticky=tk.W, pady=5)
+        self.allow_move_var = tk.BooleanVar(value=self.config.get("allow_move", True))
+        ttk.Checkbutton(main_frame, variable=self.allow_move_var).grid(row=5, column=1, sticky=tk.W, padx=5)
+
+
         # Save Button
-        ttk.Button(main_frame, text="Salvar Configurações", command=self.save_configurations).grid(row=5, column=0, columnspan=3, pady=20)
+        ttk.Button(main_frame, text="Salvar Configurações", command=self.save_configurations).grid(row=6, column=0, columnspan=3, pady=20)
 
         main_frame.columnconfigure(1, weight=1)
 
@@ -111,12 +117,10 @@ class SettingsWindow(tk.Toplevel):
 
     def show_window(self):
         """Exibe a janela de configurações."""
-        self.deiconify() # Restaura a janela se estiver minimizada/escondida
-        self.lift()      # Traz a janela para frente
-        self.focus_set() # Define o foco na janela
+        self.deiconify()
+        self.lift()
+        self.focus_set()
 
     def hide_window(self):
         """Esconde a janela de configurações (minimiza para a bandeja)."""
-        self.withdraw() # Esconde a janela
-        # Opcional: tentar fazer a janela principal reaparecer no foreground se ela estiver escondida
-        # self.parent_root.after(0, self.parent_root.lift)
+        self.withdraw()
