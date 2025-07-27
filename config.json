@@ -1,8 +1,8 @@
 {
-    "work_mins": 1,
-    "break_mins": 1,
-    "work_color": "#ffffff",
-    "break_color": "#981f40",
+    "work_mins": 25,
+    "break_mins": 5,
+    "work_color": "white",
+    "break_color": "#FF6347",
     "transparency": 0.1,
     "allow_move": true
 }

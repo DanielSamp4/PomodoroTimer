@@ -1,0 +1,8 @@
+{
+    "work_mins": 1,
+    "break_mins": 1,
+    "work_color": "white",
+    "break_color": "#FF6347",
+    "transparency": 0.1,
+    "allow_move": false
+}

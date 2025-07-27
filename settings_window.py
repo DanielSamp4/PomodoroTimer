@@ -30,7 +30,7 @@ class SettingsWindow(tk.Toplevel):
                 "work_color": "white",
                 "break_color": "#FF6347",
                 "transparency": 0.1,
-                "allow_move": True # NOVO: Permissão para mover
+                "allow_move": False # NOVO: Permissão para mover
             }
 
     def save_configurations(self):
