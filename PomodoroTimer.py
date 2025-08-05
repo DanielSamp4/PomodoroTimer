@@ -3,6 +3,7 @@ import time
 from threading import Thread, Event
 import json
 import os
+import sys
 from PIL import Image
 from pystray import Icon, Menu, MenuItem
 from settings_window import SettingsWindow
@@ -278,15 +279,24 @@ class PomodoroTimer:
             except Exception as e:
                 print(f"Erro ao tentar parar o mainloop do Tkinter: {e}")
     
+    def resource_path(self, relative_path):
+        """ Get absolute path to resource, works for dev and for PyInstaller """
+        try:
+            # PyInstaller creates a temp folder and stores path in _MEIPASS
+            base_path = sys._MEIPASS
+        except Exception:
+            base_path = os.path.abspath(".")
+
+        return os.path.join(base_path, relative_path)
     def setup_system_tray(self):
         """Configura o ícone na bandeja do sistema."""
         try:
-            icon_path = "favicon.ico" 
-            if os.path.exists(icon_path):
-                image = Image.open(icon_path)
-            else:
-                image = Image.new('RGB', (64, 64), color = 'red')
-            
+            icon_path = self.resource_path("favicon.ico") 
+            image = Image.open(icon_path)
+            # if os.path.exists(icon_path):
+            #     image = Image.open(icon_path)
+            # else:
+            #     image = Image.new('RGB', (64, 64), color = 'red')
             # NOVO: Rótulos do menu em inglês
             self._tray_menu = Menu(
                 MenuItem(
