@@ -11,7 +11,7 @@ This is a simple yet effective Pomodoro Timer application built with Python's Tk
   * ![Animation Pomodoro Timer](animation2.gif)
   * **Adjustable Colors:** Personalize the timer's colors for both work and break states.
   * **Transparency Control:** Make the timer more or less transparent to suit your desktop environment.
-  * ![Transparency Control Pomodoro Timer](move.gif)
+  * ![Transparency Control Pomodoro Timer](transparency.gif)
   * **Movable Window:** Choose whether the timer window can be dragged around your screen.
   * ![Move free Pomodoro Timer](move.gif)
   * **Font Size Adjustment:** Control the size of the displayed timer text.
